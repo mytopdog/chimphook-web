@@ -101,7 +101,7 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 						response.end(data.toString());
 					});
 					break;
-				case "/secure_af/inv_codes":
+				/*case "/secure_af/inv_codes":
 					fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 						if (err) {
 							response.writeHead(500);
@@ -117,7 +117,7 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 				default:
 					response.writeHead(404);
 					response.end(RESPONSE_404);
-					break;
+					break;*/
 			}
 			break;
 		case "POST":
