@@ -8,6 +8,9 @@ var uuid = require("uuid/v4");
 var user_handles = require("../utils/user.js");
 var session_handles = require("../utils/session.js");
 
+var INFO_BASE = path.resolve(__dirname, "../info/");
+var USERS_BASE = path.resolve(INFO_BASE, "users/");
+
 var PUBLIC_BASE = path.resolve(__dirname, "../../public/");
 var PUBLIC_PAGE = path.resolve(PUBLIC_BASE, "page/");
 var PUBLIC_RESOURCE = path.resolve(PUBLIC_BASE, "resource/");
@@ -87,6 +90,19 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 					break;
 				case "/signup":
 					fs.readFile(path.resolve(PUBLIC_PAGE, "signup.html"), "utf-8", function (err, data) {
+						if (err) {
+							response.writeHead(500);
+							response.end(RESPONSE_500);
+							
+							return;
+						}
+						
+						response.writeHead(200);
+						response.end(data.toString());
+					});
+					break;
+				case "/secure_af/inv_codes":
+					fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 						if (err) {
 							response.writeHead(500);
 							response.end(RESPONSE_500);
