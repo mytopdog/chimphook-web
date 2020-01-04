@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css?family=PT+Mono&display=swap');
+
+html, body {
+	background-color: #000000;
+	overflow: hidden;
+	padding: 0;
+	margin: 5 5;
+	font-size: 8pt;
+	font-family: 'PT Mono', monospace;
+	cursor: none;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+span, a {
+	color: white;
+	text-decoration: none;
+	cursor: none;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+span:hover, a:hover {
+	background-color: white;
+	color: black;
+	cursor: none;
+}
+
+input {
+	outline: none;
+	border: none;
+	border-bottom: 1px #444444 solid;
+	height: 15px;
+	width: 150px;
+	margin-top: 3px;
+	margin-bottom: 1px;
+	background: none;
+	color: white;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	font-size: 8pt;
+	font-family: 'PT Mono', monospace;
+	cursor: none;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-internal-autofill-selected {
+	-webkit-text-fill-color: white;
+	-webkit-box-shadow: 0 0 0px 1000px #000 inset;
+	transition: background-color 5000s ease-in-out 0s;
+	font-size: 8pt;
+	font-family: 'PT Mono', monospace;
+}
+.-main-cursor {
+	position: absolute;
+	background-color: white;
+	width: 3;
+	height: 3;
+	border-radius: 50%;
+}

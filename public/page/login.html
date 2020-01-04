@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/resource/css/main_style.css"/>
+		<script src="/resource/js/cursor.js"></script>
+		<script src="/resource/js/clock.js"></script>
+	</head>
+	<body>
+		<div class="-main-cursor"></div>
+		<div style="position: relative" class="-main">
+			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><br>
+			<span></span><br>
+			<span><a href="/">[click here to go back]</a></span><br>
+			<span><a href="/signup">[click to sign up]</a></span><br><br>
+			<form autocomplete="off">
+				<input class="-change-id" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" autocomplete="new-password" placeholder="password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
+				<span><a href="#" onclick="submit_login()">[submit]</a></span>
+			</form>
+		</div>
+		<script>
+			var _change_id = document.querySelectorAll(".-change-id");
+			
+			_change_id.forEach(elem => {
+				elem.id = Math.random().toString(36).substr(7);
+				elem.name = Math.random().toString(36).substr(7);
+			});
+		</script>
+	</body>
+</html>
