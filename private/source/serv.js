@@ -23,7 +23,7 @@ var MIME_TYPES = {
     js: 'application/javascript'
 };
 
-var PORT = process.env.PORT || 8080;
+var PORT = process.env.PORT || 80;
 var MAIN_SERVER = http.createServer(function (request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
