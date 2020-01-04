@@ -12,21 +12,97 @@
 			<span><a href="/">[click here to go back]</a></span><br>
 			<span><a href="/login">[click to log in]</a></span><br><br>
 			<form autocomplete="off">
-				<input class="-change-id" placeholder="invite code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
-				<input class="-change-id" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
-				<input class="-change-id" placeholder="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
-				<input class="-change-id" placeholder="password" autocomplete="new-password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
-				<input class="-change-id" placeholder="confirm password" autocomplete="off" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
-				<span><a href="#" onclick="submit_login()">[submit]</a></span>
+				<input class="-change-id" id="invite-code" placeholder="invite code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="username" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="email" placeholder="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="password" placeholder="password" autocomplete="new-password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
+				<input class="-change-id" id="confirm-password" placeholder="confirm password" autocomplete="off" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
+				<span><a href="#" onclick="submit_signup()">[submit]</a></span><br>
+				<span id="error" style="display: none"></span>
 			</form>
 		</div>
 		<script>
 			var _change_id = document.querySelectorAll(".-change-id");
 			
 			_change_id.forEach(elem => {
-				elem.id = Math.random().toString(36).substr(7);
+				// elem.id = Math.random().toString(36).substr(7);
 				elem.name = Math.random().toString(36).substr(7);
 			});
+			
+			// https://emailregex.com/
+			var email_regex = /(?:[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
+			var username_regex = /[a-zA-Z_\-0-9]+/;
+			
+			function submit_signup() {
+				var invite_code = document.querySelector("#invite-code").value;
+				var username = document.querySelector("#username").value;
+				var email = document.querySelector("#email").value;
+				var password = document.querySelector("#password").value;
+				var confirm_password = document.querySelector("#confirm-password").value;
+				
+				var error = document.querySelector("#error");
+				error.style.display = "none";
+				
+				if (username.length > 3) {
+					if (username.length <= 20) {
+						if (username_regex.test(username)) {
+							if (password.length > 7) {
+								if (confirm_password == password) {
+									if (email_regex.test(email)) {
+										let xhr = new XMLHttpRequest();
+										xhr.open("POST", "/signup");
+										xhr.setRequestHeader("invite-code", invite_code);
+										xhr.setRequestHeader("username", username);
+										xhr.setRequestHeader("email", email);
+										xhr.setRequestHeader("password", password);
+										xhr.setRequestHeader("-from", "-web-client");
+										xhr.send();
+
+										xhr.onload = function() {
+											if (xhr.status == 200) {
+												var json = JSON.parse(xhr.response);
+												
+												if (json.OK) {
+													error.innerHTML = "Successfully created account.";
+													error.style.display = "inline";
+												} else {
+													error.innerHTML = json.error;
+													error.style.display = "inline";
+												}
+											} else {
+												
+											}
+										}
+
+										xhr.onerror = function() {
+											error.innerHTML = "ERROR: A request error occured.";
+											error.style.display = "inline";
+										}
+									} else {
+										error.innerHTML = "ERROR: Invalid email.";
+										error.style.display = "inline";
+									}
+								} else {
+									error.innerHTML = "ERROR: Confirm password must be same as password.";
+									error.style.display = "inline";
+								}
+							} else {
+								error.innerHTML = "ERROR: Password must be at least 8 characters long.";
+								error.style.display = "inline";
+							}
+						} else {
+							error.innerHTML = "ERROR: Username must only contain characters A-Za-z0-9_-.";
+							error.style.display = "inline";
+						}
+					} else {
+						error.innerHTML = "ERROR: Username must not be longer than 20 characters long.";
+						error.style.display = "inline";
+					}
+				} else {
+					error.innerHTML = "ERROR: Username must be at least 4 characters long.";
+					error.style.display = "inline";
+				}
+			}
 		</script>
 	</body>
 </html>

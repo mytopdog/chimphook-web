@@ -3,6 +3,10 @@ var WebSocket = require("websocket");
 var url = require("url");
 var path = require("path");
 var fs = require("fs");
+var uuid = require("uuid/v4");
+
+var user_handles = require("../utils/user.js");
+var session_handles = require("../utils/session.js");
 
 var PUBLIC_BASE = path.resolve(__dirname, "../../public/");
 var PUBLIC_PAGE = path.resolve(PUBLIC_BASE, "page/");
@@ -52,49 +56,76 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 		return;
 	}
 
-	switch (pathname) {
-		case "/":
-			fs.readFile(path.resolve(PUBLIC_PAGE, "index.html"), "utf-8", function (err, data) {
-				if (err) {
-					response.writeHead(500);
-					response.end(RESPONSE_500);
-					
-					return;
-				}
-				
-				response.writeHead(200);
-				response.end(data.toString());
-			});
+	switch(request.method) {
+		case "GET":
+			switch (pathname) {
+				case "/":
+					fs.readFile(path.resolve(PUBLIC_PAGE, "index.html"), "utf-8", function (err, data) {
+						if (err) {
+							response.writeHead(500);
+							response.end(RESPONSE_500);
+							
+							return;
+						}
+						
+						response.writeHead(200);
+						response.end(data.toString());
+					});
+					break;
+				case "/login":
+					fs.readFile(path.resolve(PUBLIC_PAGE, "login.html"), "utf-8", function (err, data) {
+						if (err) {
+							response.writeHead(500);
+							response.end(RESPONSE_500);
+							
+							return;
+						}
+						
+						response.writeHead(200);
+						response.end(data.toString());
+					});
+					break;
+				case "/signup":
+					fs.readFile(path.resolve(PUBLIC_PAGE, "signup.html"), "utf-8", function (err, data) {
+						if (err) {
+							response.writeHead(500);
+							response.end(RESPONSE_500);
+							
+							return;
+						}
+						
+						response.writeHead(200);
+						response.end(data.toString());
+					});
+					break;
+				default:
+					response.writeHead(404);
+					response.end(RESPONSE_404);
+					break;
+			}
 			break;
-		case "/login":
-			fs.readFile(path.resolve(PUBLIC_PAGE, "login.html"), "utf-8", function (err, data) {
-				if (err) {
-					response.writeHead(500);
-					response.end(RESPONSE_500);
-					
-					return;
-				}
-				
-				response.writeHead(200);
-				response.end(data.toString());
-			});
-			break;
-		case "/signup":
-			fs.readFile(path.resolve(PUBLIC_PAGE, "signup.html"), "utf-8", function (err, data) {
-				if (err) {
-					response.writeHead(500);
-					response.end(RESPONSE_500);
-					
-					return;
-				}
-				
-				response.writeHead(200);
-				response.end(data.toString());
-			});
-			break;
-		default:
-			response.writeHead(404);
-			response.end(RESPONSE_404);
+		case "POST":
+			switch (pathname) {
+				case "/signup":
+					user_handles.handle_signup(request, response).then(function (success) {
+						response.writeHead(200, {
+							"Set-Cookie": "sessionid=" + uuid()
+						});
+						
+						response.end(JSON.stringify({
+							OK: true,
+							error: null,
+							username: success.username
+						}));
+					}).catch(function (error) {
+						response.writeHead(200);
+						response.end(JSON.stringify({
+							OK: false,
+							error
+						}));
+					});
+					break;
+			}
 			break;
 	}
 });

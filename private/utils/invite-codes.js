@@ -8,7 +8,7 @@ function generate_code() {
 	return uuid();
 }
 
-function create_invite_code() {
+function create_invite_code(uses) {
 	return new Promise(function (resolve, reject) {
 		fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 			if (err) {
@@ -26,7 +26,7 @@ function create_invite_code() {
 					code = generate_code();
 				}
 				
-				json[code] = true;
+				json[code] = uses;
 				
 				fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 					if (err) {
@@ -41,7 +41,7 @@ function create_invite_code() {
 	});
 }
 
-function create_invite_codes(amount) {
+function create_invite_codes(amount, uses = 1) {
 	return new Promise(function (resolve, reject) {
 		var invites = [];
 		
@@ -62,7 +62,7 @@ function create_invite_codes(amount) {
 						code = generate_code();
 					}
 					
-					json[code] = true;
+					json[code] = uses;
 					invites.push(code);
 				}
 					
