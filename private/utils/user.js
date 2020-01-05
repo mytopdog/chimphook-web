@@ -94,7 +94,7 @@ function create_user(request, response, data) {
 			
 			var USER_BASE = path.resolve(USERS_BASE, data.username);
 			
-			ip_locate.getDomainOrIPDetails(response.socket.remoteAddress, "json", function (err, details) {
+			ip_locate.getDomainOrIPDetails(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress, "json", function (err, details) {
 				fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
 				username: data.username,
 				email: data.email,
