@@ -187,20 +187,28 @@ function handle_page(request, response, session) {
 					});
 					break;
 				case "/login":
-					session_handles.handle_login(request, response).then(function (success) {
-						response.end(JSON.stringify({
-							OK: true,
-							error: null,
-							username: success.username,
-							session: success.session
-						}));
-					}).catch(function (error) {
+					if (session) {
 						response.writeHead(200);
 						response.end(JSON.stringify({
 							OK: false,
-							error
+							error: "ERROR: You are already logged in"
 						}));
-					});
+					} else {
+						session_handles.handle_login(request, response).then(function (success) {
+							response.end(JSON.stringify({
+								OK: true,
+								error: null,
+								username: success.username,
+								session: success.session
+							}));
+						}).catch(function (error) {
+							response.writeHead(200);
+							response.end(JSON.stringify({
+								OK: false,
+								error
+							}));
+						});
+					}
 					break;
 				case "/logout":
 					session_handles.handle_logout(request, response).then(res.send).catch(console.log);

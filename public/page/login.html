@@ -49,7 +49,7 @@
 									if (xhr.status == 200) {
 										var json = JSON.parse(xhr.response);
 										
-										if (json.OK) {
+										if (json.OK) 
 											location.reload();
 										} else {
 											error.innerHTML = json.error;
