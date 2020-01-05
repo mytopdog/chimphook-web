@@ -7,6 +7,7 @@ window.addEventListener("mousemove", function (event) {
 	mouse_pos_x = event.pageX;
 	mouse_pos_y = event.pageY;
 	
+	cursor.style.display = "none";
 	cursor.style.left = event.pageX;
 	cursor.style.top = event.pageY;
 });

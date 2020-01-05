@@ -7,7 +7,7 @@
 	<body>
 		<div class="-main-cursor"></div>
 		<div style="position: relative" class="-main">
-			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><br>
+			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><span> | </span><span id="login-check">not logged in</span><br>
 			<span></span><br>
 			<span><a href="/">[click here to go back]</a></span><br>
 			<span><a href="/login">[click to log in]</a></span><br><br>
@@ -25,7 +25,6 @@
 			var _change_id = document.querySelectorAll(".-change-id");
 			
 			_change_id.forEach(elem => {
-				// elem.id = Math.random().toString(36).substr(7);
 				elem.name = Math.random().toString(36).substr(7);
 			});
 			

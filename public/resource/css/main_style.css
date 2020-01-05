@@ -7,7 +7,7 @@ html, body {
 	margin: 5 5;
 	font-size: 8pt;
 	font-family: 'PT Mono', monospace;
-	cursor: none;
+	/*cursor: none;*/
 	-webkit-touch-callout: none;
     -webkit-user-select: none;
 	-khtml-user-select: none;
@@ -19,7 +19,7 @@ html, body {
 span, a {
 	color: white;
 	text-decoration: none;
-	cursor: none;
+	/*cursor: none;*/
 	-webkit-touch-callout: none;
     -webkit-user-select: none;
 	-khtml-user-select: none;
@@ -31,7 +31,7 @@ span, a {
 span:hover, a:hover {
 	background-color: white;
 	color: black;
-	cursor: none;
+	/*cursor: none;*/
 }
 
 input {
@@ -52,7 +52,7 @@ input {
 	user-select: none;
 	font-size: 8pt;
 	font-family: 'PT Mono', monospace;
-	cursor: none;
+	/*cursor: none;*/
 }
 
 input:-webkit-autofill,

@@ -7,23 +7,80 @@
 	<body>
 		<div class="-main-cursor"></div>
 		<div style="position: relative" class="-main">
-			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><br>
+			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><span> | </span><span id="login-check">not logged in</span><br>
 			<span></span><br>
 			<span><a href="/">[click here to go back]</a></span><br>
 			<span><a href="/signup">[click to sign up]</a></span><br><br>
 			<form autocomplete="off">
-				<input class="-change-id" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
-				<input class="-change-id" autocomplete="new-password" placeholder="password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
-				<span><a href="#" onclick="submit_login()">[submit]</a></span>
+				<input class="-change-id" id="username" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="password" autocomplete="new-password" placeholder="password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
+				<span><a href="#" onclick="submit_login()">[submit]</a></span><br>
+				<span id="error" style="display: none"></span>
 			</form>
 		</div>
 		<script>
 			var _change_id = document.querySelectorAll(".-change-id");
 			
 			_change_id.forEach(elem => {
-				elem.id = Math.random().toString(36).substr(7);
 				elem.name = Math.random().toString(36).substr(7);
 			});
+			
+			var username_regex = /[a-zA-Z_\-0-9]+/;
+
+			function submit_login() {
+				var username = document.querySelector("#username").value;
+				var password = document.querySelector("#password").value;
+				
+				var error = document.querySelector("#error");
+				error.style.display = "none";
+				
+				if (username.length > 3) {
+					if (username.length <= 20) {
+						if (username_regex.test(username)) {
+							if (password.length > 7) {
+								let xhr = new XMLHttpRequest();
+								xhr.open("POST", "/login");
+								xhr.setRequestHeader("username", username);
+								xhr.setRequestHeader("password", password);
+								xhr.setRequestHeader("-from", "-web-client");
+								xhr.send();
+
+								xhr.onload = function() {
+									if (xhr.status == 200) {
+										var json = JSON.parse(xhr.response);
+										
+										if (json.OK) {
+											location.reload();
+										} else {
+											error.innerHTML = json.error;
+											error.style.display = "inline";
+										}
+									} else {
+										
+									}
+								}
+
+								xhr.onerror = function() {
+									error.innerHTML = "ERROR: A request error occured.";
+									error.style.display = "inline";
+								}
+							} else {
+								error.innerHTML = "ERROR: Invalid credentials.";
+								error.style.display = "inline";
+							}
+						} else {
+							error.innerHTML = "ERROR: User not found.";
+							error.style.display = "inline";
+						}
+					} else {
+						error.innerHTML = "ERROR: User not found.";
+						error.style.display = "inline";
+					}
+				} else {
+					error.innerHTML = "ERROR: User not found.";
+					error.style.display = "inline";
+				}
+			}
 		</script>
 	</body>
 </html>
