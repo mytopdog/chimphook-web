@@ -13,8 +13,11 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "email-check": "^1.1.0",
     "ip-locator": "0.0.1",
     "mkdirp": "^0.5.1",
+    "node-html-parser": "^1.1.16",
+    "randomstring": "^1.1.5",
     "uuid": "^3.3.3",
     "websocket": "^1.0.31"
   }

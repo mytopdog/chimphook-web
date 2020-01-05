@@ -3,6 +3,7 @@ var bcrypt = require("bcryptjs");
 var path = require("path");
 var fs = require("fs");
 var mkdir = require("mkdirp");
+var check_email = require("email-check");
 
 var SALT_ROUNDS = 10;
 
@@ -53,12 +54,16 @@ function check_invite_code(invite_code) {
 
 function check_username(username) {
 	return new Promise(function (resolve, reject) {
-		fs.exists(path.resolve(USERS_BASE, username + "/"), function (err, exists) {
-			if (err) {
-				return reject(err);
-			}
-			
+		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
 			resolve(!exists);
+		});
+	});
+}
+
+function user_exists(username) {
+	return new Promise(function (resolve, reject) {
+		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
+			resolve(exists);
 		});
 	});
 }
@@ -91,10 +96,12 @@ function create_user(data) {
 			
 			fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
 				username: data.username,
+				email: data.email,
 				password: data.hash,
 				ip: "0.0.0.0",
 				location: "NULL",
-				used_invite_code: data.invite_code
+				used_invite_code: data.invite_code,
+				admin: false
 			}), function (err) {
 				if (err) {
 					return reject(err);
@@ -122,48 +129,58 @@ function handle_signup(request, response) {
 		if (valid_username(username)) {
 			check_username(username).then(function (available) {
 				if (available) {
-					if (valid_pass) {
-						if (valid_email) {
-							check_invite_code(invite_code).then(function (use) {
-								if (use) {
-									bcrypt.genSalt(SALT_ROUNDS, function (err, salt) {
-										if (err) {
-											console.log(err);
-											return reject("ERROR: Internal server error.");
-										}
-										
-										bcrypt.hash(password, salt, function (err, hash) {
-											if (err) {
-												console.log(err);
-												return reject("ERROR: Internal server error.");
-											}
-											
-											create_user({
-												username,
-												email,
-												hash,
-												invite_code
-											}).then(function () {
-												use_invite_code(invite_code);
-												
-												resolve({
-													username
-												});
-											}).catch(function (err) {
+					if (valid_pass(password)) {
+						if (valid_email(email)) {
+							check_email(email).then(function (exists) {
+								if (exists) {
+									check_invite_code(invite_code).then(function (use) {
+										if (use) {
+											bcrypt.genSalt(SALT_ROUNDS, function (err, salt) {
 												if (err) {
-													console.log(err);
-													reject("ERROR: Failed to create user.");
+													console.log("SALT ERROR", err);
+													return reject("ERROR: Internal server error.");
 												}
+												
+												bcrypt.hash(password, salt, function (err, hash) {
+													if (err) {
+														console.log("HASH ERROR", err);
+														return reject("ERROR: Internal server error.");
+													}
+													
+													create_user({
+														username,
+														email,
+														hash,
+														invite_code
+													}).then(function () {
+														use_invite_code(invite_code);
+														
+														resolve({
+															username
+														});
+													}).catch(function (err) {
+														if (err) {
+															console.log(err);
+															reject("ERROR: Failed to create user.");
+														}
+													});
+												});
 											});
-										});
+										} else {
+											reject("ERROR: Invalid invite code.");
+										}
+									}).catch(function (err) {
+										if (err) {
+											console.log("INVITE CHECK ERROR", err);
+											reject("ERROR: Internal server error.");
+										}
 									});
 								} else {
-									reject("ERROR: Invalid invite code.");
+									reject("ERROR: Invalid email.");
 								}
 							}).catch(function (err) {
 								if (err) {
-									console.log(err);
-									reject("ERROR: Internal server error.");
+									reject("ERROR: Invalid email.");
 								}
 							});
 						} else {
@@ -177,7 +194,7 @@ function handle_signup(request, response) {
 				}
 			}).catch(function (err) {
 				if (err) {
-					console.log(err);
+					console.log("CHECK USERNAME ERROR", err);
 					reject("ERROR: Internal server error.");
 				}
 			});
@@ -188,5 +205,6 @@ function handle_signup(request, response) {
 }
 
 module.exports = {
-	handle_signup
+	handle_signup,
+	user_exists
 };
