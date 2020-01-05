@@ -21,7 +21,7 @@ function use_invite_code(invite_code) {
 				var json = JSON.parse(data);
 				
 				if (json[invite_code]) {
-					json[invite_code]--;
+					json[invite_code].uses--;
 					
 					fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), JSON.stringify(json), function (err) {
 						if (err) {
@@ -85,7 +85,7 @@ function valid_pass(password) {
 	return password.length > 7;
 }
 
-function create_user(data) {
+function create_user(request, response, data) {
 	return new Promise(function (resolve, reject) {
 		mkdir(path.resolve(USERS_BASE, data.username), function (err) {
 			if (err) {
@@ -94,14 +94,17 @@ function create_user(data) {
 			
 			var USER_BASE = path.resolve(USERS_BASE, data.username);
 			
-			fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
+			ip_locate.getDomainOrIPDetails(response.socket.remoteAddress, "json", function (err, details) {
+				fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
 				username: data.username,
 				email: data.email,
 				password: data.hash,
-				ip: "0.0.0.0",
-				location: "NULL",
+				ip: response.socket.remoteAddress,
+				location: details,
 				used_invite_code: data.invite_code,
-				admin: false
+				invited_by: data.invite_code.invited_by,
+				admin: false,
+				date_joined: new Date().getTime()
 			}), function (err) {
 				if (err) {
 					return reject(err);
@@ -114,6 +117,7 @@ function create_user(data) {
 					
 					resolve();
 				});
+			});
 			});
 		});
 	});
@@ -133,8 +137,8 @@ function handle_signup(request, response) {
 						if (valid_email(email)) {
 							check_email(email).then(function (exists) {
 								if (exists) {
-									check_invite_code(invite_code).then(function (use) {
-										if (use) {
+									check_invite_code(invite_code).then(function (code) {
+										if (code && code.uses) {
 											bcrypt.genSalt(SALT_ROUNDS, function (err, salt) {
 												if (err) {
 													console.log("SALT ERROR", err);
@@ -147,13 +151,13 @@ function handle_signup(request, response) {
 														return reject("ERROR: Internal server error.");
 													}
 													
-													create_user({
+													create_user(request, response, {
 														username,
 														email,
 														hash,
-														invite_code
+														invite_code: code
 													}).then(function () {
-														use_invite_code(invite_code);
+														use_invite_code(invite_code.code);
 														
 														resolve({
 															username

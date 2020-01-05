@@ -18,7 +18,7 @@ var invcode = require("../utils/invite-codes.js");
 	
 	console.log("[INFO] Creating " + args[0] + " invites..");
 	
-	invcode.create_invite_codes(invites, uses || 1).then(function (invites) {
+	invcode.create_invite_codes(invites, uses || 1, "ADMIN").then(function (invites) {
 		if (args[1]) {
 			fs.writeFile(path.resolve(__dirname, args[1]), invites.join("\n"), function (err, data) {
 				if (err) {

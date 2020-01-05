@@ -35,7 +35,6 @@ function create_session(request, response, user) {
 					return;
 				}
 				
-				console.log(session);
 				response.setHeader("Set-Cookie", "s_id=" + session + ";");
 				
 				resolve(session);

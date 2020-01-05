@@ -49,7 +49,7 @@ function get_query(str, variable) {
 
 var PORT = process.env.PORT || 80;
 
-function load_page(request, response, page, session) {
+function load_page(request, response, page) {
 	fs.readFile(path.resolve(PUBLIC_PAGE, page), "utf-8", function (err, data) {
 		if (err) {
 			response.writeHead(500);
@@ -64,11 +64,11 @@ function load_page(request, response, page, session) {
 			pre: true
 		});
 		
-		if (session) {
+		if (request.user) {
 			var logged_in = document.querySelector("#login-check");
 		
 			if (logged_in)
-				logged_in.set_content(session);
+				logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
 		}
 			
 		response.writeHead(200);
@@ -76,9 +76,11 @@ function load_page(request, response, page, session) {
 	});
 }
 
-function handle_page(request, response, session) {
+function handle_page(request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
+	
+	console.log(request.socket.remoteAddress);
 	
 	if (pathname.startsWith("/resource/")) {
 		fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
@@ -108,30 +110,28 @@ function handle_page(request, response, session) {
 		case "GET":
 			switch (pathname) {
 				case "/":
-					load_page(request, response, session ? "index_login.html" : "index.html", session);
+					load_page(request, response, request.user ? "index_login.html" : "index.html");
 					break;
 				case "/login":
-					load_page(request, response, "login.html", session);
+					load_page(request, response, "login.html");
 					break;
 				case "/signup":
-					load_page(request, response, "signup.html", session);
+					load_page(request, response, "signup.html");
 					break;
 				case "/account":
 					function redirect() {
-						if (session) {
-							response.end("<html><body><script>location.href=\"/account?user=" + session + "\";</script></body></html>");
+						if (request.user.username) {
+							response.end("<html><body><script>location.href=\"/account?user=" + request.user.username + "\";</script></body></html>");
 						} else {
 							response.end(RESPONSE_REDIRECT);
 						}
 					}
 					
 					if (parse_url.query) {
-						console.log(get_query(parse_url.query, "user"));
-							
 						if (get_query(parse_url.query, "user")) {
 							user_handles.user_exists(get_query(parse_url.query, "user")).then(function (exists) {
 								if (exists) {
-									load_page(request, response, "account.html", session);
+									load_page(request, response, "account.html");
 								} else {
 									redirect();
 								}
@@ -141,6 +141,56 @@ function handle_page(request, response, session) {
 						}
 					} else {
 						redirect();
+					}
+					break;
+				case "/admin/invites":
+					if (request.user && request.user.admin) {
+						fs.readFile(path.resolve(PUBLIC_PAGE, "invites.html"), "utf-8", function (err, data) {
+							if (err) {
+								response.writeHead(500);
+								response.end(RESPONSE_500);
+								
+								return;
+							}
+						
+							var document = html_parser.parse(data, {
+								script: true,
+								style: true,
+								pre: true
+							});
+							
+							fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
+								if (err) {
+									response.writeHead(500);
+									response.end(RESPONSE_500);
+									
+									return;
+								}
+							
+								var json = JSON.parse(data);
+								var codes = Object.values(json);
+								
+								var logged_in = document.querySelector("#login-check");
+							
+								if (logged_in)
+									logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+								
+								var invites = document.querySelector("#invites");
+								
+								invites.set_content("<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
+									return a.uses < b.uses
+								}).map(function (code, i) {
+									return "<th>" + i + ". </th>" +
+										"<th class=\"code\">" + code.code + "</th>" +
+										"<th>" + code.uses + "</th>";
+								}).join("<tr>"));
+									
+								response.writeHead(200);
+								response.end(document.toString());
+							});
+						});
+					} else {
+						response.end(RESPONSE_REDIRECT);
 					}
 					break;
 				case "/logout":
@@ -153,10 +203,10 @@ function handle_page(request, response, session) {
 					});
 					break;
 				case "/loggedin":
-					if (session) {
+					if (request.user) {
 						response.end(JSON.stringify({
 							loggedin: true,
-							username: session
+							username: request.user.username
 						}));
 					} else {
 						response.end(JSON.stringify({
@@ -185,7 +235,7 @@ function handle_page(request, response, session) {
 					});
 					break;
 				case "/login":
-					if (session) {
+					if (request.user) {
 						response.writeHead(200);
 						response.end(JSON.stringify({
 							OK: false,
@@ -218,6 +268,7 @@ function handle_page(request, response, session) {
 
 var MAIN_SERVER = http.createServer(function (request, response) {
 	var session = parse_cookies(request.headers.cookie)["s_id"];
+	request.user = null;
 	
 	if (session) {
 		fs.readFile(path.resolve(INFO_BASE, "session.json"), "utf-8", function (err, data) {
@@ -227,7 +278,15 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 			}
 			
 			var json = JSON.parse(data);
-			handle_page(request, response, json[session] || null);
+			fs.readFile(path.resolve(INFO_BASE, "users/" + json[session] + "/account.json"), "utf-8", function (err, data) {
+				if (err) {
+					console.log(err);
+					return handle_page(request, response);
+				}
+				
+				request.user = JSON.parse(data);
+				return handle_page(request, response);
+			});
 		});
 	} else {
 		handle_page(request, response, null);

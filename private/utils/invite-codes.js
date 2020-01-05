@@ -8,7 +8,7 @@ function generate_code() {
 	return uuid();
 }
 
-function create_invite_code(uses) {
+function create_invite_code(uses = 1, invited_by = "ADMIN") {
 	return new Promise(function (resolve, reject) {
 		fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 			if (err) {
@@ -26,7 +26,11 @@ function create_invite_code(uses) {
 					code = generate_code();
 				}
 				
-				json[code] = uses;
+				json[code] = {
+					code,
+					uses,
+					invited_by
+				}
 				
 				fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 					if (err) {
@@ -41,7 +45,7 @@ function create_invite_code(uses) {
 	});
 }
 
-function create_invite_codes(amount, uses = 1) {
+function create_invite_codes(amount, uses = 1, invited_by = "ADMIN") {
 	return new Promise(function (resolve, reject) {
 		var invites = [];
 		
@@ -62,7 +66,11 @@ function create_invite_codes(amount, uses = 1) {
 						code = generate_code();
 					}
 					
-					json[code] = uses;
+					json[code] = {
+						code,
+						uses,
+						invited_by
+					}
 					invites.push(code);
 				}
 					

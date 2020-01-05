@@ -1,8 +1,10 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="/resource/css/main_style.css"/>
+		<link rel="shortcut icon" type="image/x-icon" href="/resource/img/chimplogo.png"/>
 		<script src="/resource/js/cursor.js"></script>
 		<script src="/resource/js/clock.js"></script>
+		<title>The Chimp Store</title>
 	</head>
 	<body>
 		<div class="-main-cursor"></div>
@@ -26,6 +28,11 @@
 			});
 			
 			var username_regex = /[a-zA-Z_\-0-9]+/;
+			
+			if (location.href.indexOf("success=true") != -1) {
+				error.innerHTML = "Successfully logged in.";
+				error.style.display = "inline";
+			}
 
 			function submit_login() {
 				var username = document.querySelector("#username").value;
@@ -49,8 +56,8 @@
 									if (xhr.status == 200) {
 										var json = JSON.parse(xhr.response);
 										
-										if (json.OK) 
-											location.reload();
+										if (json.OK) {
+											location.href = "/login?success=true";
 										} else {
 											error.innerHTML = json.error;
 											error.style.display = "inline";

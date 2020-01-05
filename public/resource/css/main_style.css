@@ -1,12 +1,13 @@
 @import url('https://fonts.googleapis.com/css?family=PT+Mono&display=swap');
 
-html, body {
+html, body, th {
 	background-color: #000000;
 	overflow: hidden;
 	padding: 0;
 	margin: 5 5;
 	font-size: 8pt;
 	font-family: 'PT Mono', monospace;
+	font-weight: 400;
 	/*cursor: none;*/
 	-webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -14,18 +15,22 @@ html, body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	text-align: left;
 }
 
-span, a {
+span, a, th {
 	color: white;
 	text-decoration: none;
-	/*cursor: none;*/
-	-webkit-touch-callout: none;
-    -webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+}
+
+.code {
+	padding-right: 2em;
+	-webkit-touch-callout: text;
+    -webkit-user-select: text;
+	-khtml-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
 }
 
 span:hover, a:hover {
