@@ -117,32 +117,30 @@ function handle_page(request, response, session) {
 					load_page(request, response, "signup.html", session);
 					break;
 				case "/account":
-					if (parse_url.query) {
-						console.log(get_query(parse_url.query, "user"));
-							
-						if (get_query(parse_url.query, "user")) {
-							user_handles.user_exists(get_query(parse_url.query, "user")).then(function (exists) {
-								load_page(request, response, "account.html", session);
-							}).catch(function () {
-								if (session) {
-									response.end("<html><body><script>location.href=\"/account?user=" + session + "\";</script></body></html>");
-								} else {
-									response.end(RESPONSE_REDIRECT);
-								}
-							});
-						} else {
-							if (session) {
-								response.end("<html><body><script>location.href=\"/account?user=" + session + "\";</script></body></html>");
-							} else {
-								response.end(RESPONSE_REDIRECT);
-							}
-						}
-					} else {
+					function redirect() {
 						if (session) {
 							response.end("<html><body><script>location.href=\"/account?user=" + session + "\";</script></body></html>");
 						} else {
 							response.end(RESPONSE_REDIRECT);
 						}
+					}
+					
+					if (parse_url.query) {
+						console.log(get_query(parse_url.query, "user"));
+							
+						if (get_query(parse_url.query, "user")) {
+							user_handles.user_exists(get_query(parse_url.query, "user")).then(function (exists) {
+								if (exists) {
+									load_page(request, response, "account.html", session);
+								} else {
+									redirect();
+								}
+							}).catch(redirect);
+						} else {
+							redirect();
+						}
+					} else {
+						redirect();
 					}
 					break;
 				case "/logout":
