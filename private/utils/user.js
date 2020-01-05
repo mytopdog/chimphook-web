@@ -86,6 +86,8 @@ function valid_pass(password) {
 }
 
 function create_user(request, response, data) {
+	var ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddres;
+	
 	return new Promise(function (resolve, reject) {
 		mkdir(path.resolve(USERS_BASE, data.username), function (err) {
 			if (err) {
@@ -94,12 +96,12 @@ function create_user(request, response, data) {
 			
 			var USER_BASE = path.resolve(USERS_BASE, data.username);
 			
-			ip_locate.getDomainOrIPDetails(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress, "json", function (err, details) {
+			ip_locate.getDomainOrIPDetails(ip, "json", function (err, details) {
 				fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
 				username: data.username,
 				email: data.email,
 				password: data.hash,
-				ip: response.socket.remoteAddress,
+				ip,
 				location: details,
 				used_invite_code: data.invite_code,
 				invited_by: data.invite_code.invited_by,

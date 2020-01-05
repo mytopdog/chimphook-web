@@ -80,7 +80,7 @@ function handle_page(request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
 	
-	console.log(request.socket.remoteAddress);
+	console.log(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddres);
 	
 	if (pathname.startsWith("/resource/")) {
 		fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
@@ -278,15 +278,20 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 			}
 			
 			var json = JSON.parse(data);
-			fs.readFile(path.resolve(INFO_BASE, "users/" + json[session] + "/account.json"), "utf-8", function (err, data) {
-				if (err) {
-					console.log(err);
+			
+			if (json[session]) {
+				fs.readFile(path.resolve(INFO_BASE, "users/" + json[session] + "/account.json"), "utf-8", function (err, data) {
+					if (err) {
+						console.log(err);
+						return handle_page(request, response);
+					}
+					
+					request.user = JSON.parse(data);
 					return handle_page(request, response);
-				}
-				
-				request.user = JSON.parse(data);
+				});
+			} else {
 				return handle_page(request, response);
-			});
+			}
 		});
 	} else {
 		handle_page(request, response, null);
