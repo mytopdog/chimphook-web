@@ -157,7 +157,7 @@ function handle_signup(request, response) {
 														hash,
 														invite_code: code
 													}).then(function () {
-														use_invite_code(invite_code.code);
+														use_invite_code(code.code);
 														
 														resolve({
 															username
