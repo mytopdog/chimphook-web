@@ -86,7 +86,7 @@ function valid_pass(password) {
 }
 
 function create_user(request, response, data) {
-	var ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddres;
+	var ip = request.headers['cf-connecting-ip'] || request.headers['x-forwarded-for'] || request.connection.remoteAddres;
 	
 	return new Promise(function (resolve, reject) {
 		mkdir(path.resolve(USERS_BASE, data.username), function (err) {

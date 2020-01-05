@@ -80,7 +80,7 @@ function handle_page(request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
 	
-	console.log(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddres);
+	console.log(request.headers['cf-connecting-ip'] || request.headers['x-forwarded-for'] || request.connection.remoteAddres);
 	
 	if (pathname.startsWith("/resource/")) {
 		fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
