@@ -220,7 +220,7 @@ function handle_page(request, response) {
 								var invites = document.querySelector("#invites");
 								
 								invites.set_content("<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
-									return a.uses < b.uses
+									return b.uses - a.uses;
 								}).map(function (code, i) {
 									return "<th>" + (i+1) + ". </th>" +
 										"<th class=\"code\">" + code.code + "</th>" +
