@@ -18,6 +18,8 @@ var PUBLIC_BASE = path.resolve(__dirname, "../../public/");
 var PUBLIC_PAGE = path.resolve(PUBLIC_BASE, "page/");
 var PUBLIC_RESOURCE = path.resolve(PUBLIC_BASE, "resource/");
 
+var CERT_BASE = path.resolve("/etc/letsencrypt/live/thechimp.store");
+
 var RESPONSE_404 = "404: PAGE NOT FOUND.";
 var RESPONSE_500 = "500: AN ERROR OCCURRED INTERNALLY.";
 var RESPONSE_REDIRECT = "<html><body><script>location.href=\"/\";</script></body></html>";
@@ -344,14 +346,14 @@ function handle_request(request, response) {
 (function main(args) {
 	var MAIN_SERVER;
 	
-	console.log("Cert exists?: " + fs.existsSync(path.resolve(__dirname, "../cert/")));
+	console.log("Cert exists?: " + fs.existsSync(CERT_BASE));
 
-	if (fs.existsSync(path.resolve(__dirname, "../cert/"))) {
+	if (fs.existsSync(CERT_BASE)) {
 		PORT = 433;
 		MAIN_SERVER = https.createServer({
-			key: fs.readFileSync(path.resolve(__dirname, "../cert/privkey.pem")),
-			cert: fs.readFileSync(path.resolve(__dirname, "../cert/cert.pem")),
-			ca: fs.readFileSync(path.resolve(__dirname, "../cert/chain.pem"))
+			key: fs.readFileSync(path.resolve(CERT_BASE, "privkey.pem")),
+			cert: fs.readFileSync(path.resolve(CERT_BASE, "cert.pem")),
+			ca: fs.readFileSync(path.resolve(CERT_BASE, "chain.pem"))
 		}, function (request, response) {
 			handle_request(request, response);
 		});
