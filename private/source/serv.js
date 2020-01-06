@@ -275,7 +275,7 @@ function handle_page(request, response) {
 						response.writeHead(200);
 						response.end(JSON.stringify({
 							OK: false,
-							err
+							error: err
 						}));
 					});
 					break;
@@ -294,11 +294,11 @@ function handle_page(request, response) {
 								username: success.username,
 								session: success.session
 							}));
-						}).catch(function (error) {
+						}).catch(function (err) {
 							response.writeHead(200);
 							response.end(JSON.stringify({
 								OK: false,
-								error
+								error: err
 							}));
 						});
 					}

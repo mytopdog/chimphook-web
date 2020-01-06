@@ -104,7 +104,7 @@ function get_user_hash(username) {
 }
 
 function valid_username(username) {
-	var check_regex = /[a-zA-Z_\-0-9]+/;
+	var check_regex = /^[a-zA-Z_\-0-9]+$/;
 	
 	return check_regex.test(username) && username.length > 3 && username.length < 20;
 }

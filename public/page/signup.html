@@ -14,7 +14,7 @@
 			<span><a href="/login">[click to log in]</a></span><br><br>
 			<form autocomplete="off">
 				<input class="-change-id" id="invite-code" placeholder="invite code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
-				<input class="-change-id" id="username" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="username" maxLength=20 placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
 				<input class="-change-id" id="email" placeholder="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
 				<input class="-change-id" id="password" placeholder="password" autocomplete="new-password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
 				<input class="-change-id" id="confirm-password" placeholder="confirm password" autocomplete="off" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
@@ -30,8 +30,8 @@
 			});
 			
 			// https://emailregex.com/
-			var email_regex = /(?:[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-			var username_regex = /[a-zA-Z_\-0-9]+/;
+			var email_regex = /^(?:[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
+			var username_regex = /^[a-zA-Z_\-0-9]+$/;
 			
 			function submit_signup() {
 				var invite_code = document.querySelector("#invite-code").value;

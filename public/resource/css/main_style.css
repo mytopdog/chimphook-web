@@ -71,6 +71,7 @@ input:-internal-autofill-selected {
 	font-family: 'PT Mono', monospace;
 }
 .-main-cursor {
+	display: none;
 	position: absolute;
 	background-color: white;
 	width: 3;

@@ -13,7 +13,7 @@
 			<span><a href="/">[click here to go back]</a></span><br>
 			<span><a href="/signup">[click to sign up]</a></span><br><br>
 			<form autocomplete="off">
-				<input class="-change-id" id="username" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
+				<input class="-change-id" id="username" maxLength=20 placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/><br>
 				<input class="-change-id" id="password" autocomplete="new-password" placeholder="password" type="password" autocorrect="off" autocapitalize="off" spellcheck="false"><br>
 				<span><a href="#" onclick="submit_login()">[submit]</a></span><br>
 				<span id="error" style="display: none"></span>
@@ -26,7 +26,7 @@
 				elem.name = Math.random().toString(36).substr(7);
 			});
 			
-			var username_regex = /[a-zA-Z_\-0-9]+/;
+			var username_regex = /^[a-zA-Z_\-0-9]+$/;
 			
 			if (location.href.indexOf("success=true") != -1) {
 				error.innerHTML = "Successfully logged in.";
