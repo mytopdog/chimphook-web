@@ -80,8 +80,6 @@ function handle_page(request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
 	
-	console.log(request.headers['cf-connecting-ip'] || request.headers['x-forwarded-for'] || request.connection.remoteAddres);
-	
 	if (pathname.startsWith("/resource/")) {
 		fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
 			if (err) {
@@ -128,10 +126,53 @@ function handle_page(request, response) {
 					}
 					
 					if (parse_url.query) {
-						if (get_query(parse_url.query, "user")) {
-							user_handles.user_exists(get_query(parse_url.query, "user")).then(function (exists) {
+						var user = get_query(parse_url.query, "user");
+						if (user) {
+							user_handles.user_exists(user).then(function (exists) {
 								if (exists) {
-									load_page(request, response, "account.html");
+									fs.readFile(path.resolve(PUBLIC_PAGE, "account.html"), "utf-8", function (err, data) {
+										if (err) {
+											response.writeHead(500);
+											response.end(RESPONSE_500);
+											
+											return;
+										}
+									
+										var document = html_parser.parse(data, {
+											script: true,
+											style: true,
+											pre: true
+										});
+										
+										if (request.user) {
+											var logged_in = document.querySelector("#login-check");
+										
+											if (logged_in)
+												logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+										}
+										
+										var user_e = document.querySelector("#user-info");
+										
+										fs.readFile(path.resolve(INFO_BASE, "users/" + user + "/account.json"), "utf-8", function (err, data) {
+											if (err) {
+												response.writeHead(500);
+												response.end(RESPONSE_500);
+												
+												return;
+											}
+											
+											var json = JSON.parse(data);
+											
+											user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username + (json.admin ? " [ADMIN]" : "")));
+											user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
+											user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.location.country || "n/a"));
+											user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
+											user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
+											
+											response.writeHead(200);
+											response.end(document.toString());
+										});
+									});
 								} else {
 									redirect();
 								}
@@ -180,7 +221,7 @@ function handle_page(request, response) {
 								invites.set_content("<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
 									return a.uses < b.uses
 								}).map(function (code, i) {
-									return "<th>" + i + ". </th>" +
+									return "<th>" + (i+1) + ". </th>" +
 										"<th class=\"code\">" + code.code + "</th>" +
 										"<th>" + code.uses + "</th>";
 								}).join("<tr>"));
