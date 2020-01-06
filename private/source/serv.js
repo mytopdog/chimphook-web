@@ -342,13 +342,15 @@ function handle_request(request, response) {
 
 (function main(args) {
 	var MAIN_SERVER;
+	
+	console.log("Cert exists?: " + fs.existsSync(path.resolve(__dirname, "../cert/")));
 
-	if (fs.existsSync("../cert/")) {
+	if (fs.existsSync(path.resolve(__dirname, "../cert/"))) {
 		PORT = 433;
 		MAIN_SERVER = https.createServer({
-			key: fs.readFileSync("../cert/privkey.pem"),
-			cert: fs.readFileSync("../cert/cert.pem"),
-			ca: fs.readFileSync("../cert/chain.pem")
+			key: fs.readFileSync(path.resolve(__dirname, "../cert/privkey.pem")),
+			cert: fs.readFileSync(path.resolve(__dirname, "../cert/cert.pem")),
+			ca: fs.readFileSync(path.resolve(__dirname, "../cert/chain.pem"))
 		}, function (request, response) {
 			handle_request(request, response);
 		});
