@@ -18,7 +18,7 @@ var PUBLIC_BASE = path.resolve(__dirname, "../../public/");
 var PUBLIC_PAGE = path.resolve(PUBLIC_BASE, "page/");
 var PUBLIC_RESOURCE = path.resolve(PUBLIC_BASE, "resource/");
 
-var CERT_BASE = path.resolve("/etc/letsencrypt/live/thechimp.store");
+var CERT_BASE = path.resolve("/etc/letsencrypt/live/thechimp.store-0002");
 
 var RESPONSE_404 = "404: PAGE NOT FOUND.";
 var RESPONSE_500 = "500: AN ERROR OCCURRED INTERNALLY.";
