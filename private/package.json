@@ -4,7 +4,7 @@
   "description": "CHIMPHOOK WEB",
   "main": "source/serv.js",
   "scripts": {
-    "start": "node source/serv.js"
+    "start": "node source/serv.js -secure"
   },
   "keywords": [
     "]"

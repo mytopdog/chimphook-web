@@ -308,7 +308,7 @@ function handle_page(request, response) {
 	}
 }
 
-var MAIN_SERVER = http.createServer(function (request, response) {
+function handle_request(request, response) {
 	var session = parse_cookies(request.headers.cookie)["s_id"];
 	request.user = null;
 	
@@ -338,8 +338,16 @@ var MAIN_SERVER = http.createServer(function (request, response) {
 	} else {
 		handle_page(request, response, null);
 	}
+}
+
+(function main(args) {
+	var MAIN_SERVER = http.createServer(function (request, response) {
+		
+	});
+
+	MAIN_SERVER.listen(PORT, function () {
+		console.log("[" + (new Date()) + "] SERVER LISTENING ON PORT *:" + PORT);
+	});
 });
 
-MAIN_SERVER.listen(PORT, function () {
-	console.log("[" + (new Date()) + "] SERVER LISTENING ON PORT *:" + PORT);
-});
+main(process.env.args.splice(2));
