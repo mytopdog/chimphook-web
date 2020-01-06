@@ -341,13 +341,25 @@ function handle_request(request, response) {
 }
 
 (function main(args) {
-	var MAIN_SERVER = http.createServer(function (request, response) {
-		
-	});
+	var MAIN_SERVER;
+
+	if (fs.existsSync("../cert/")) {
+		PORT = 433;
+		MAIN_SERVER = https.createServer({
+			key: fs.readFileSync("../cert/privkey.pem"),
+			cert: fs.readFileSync("../cert/cert.pem"),
+			ca: fs.readFileSync("../cert/chain.pem")
+		}, function (request, response) {
+			handle_request(request, response);
+		});
+	} else {
+		PORT = 80;
+		MAIN_SERVER = http.createServer(function (request, response) {
+			handle_request(request, response);
+		});
+	}
 
 	MAIN_SERVER.listen(PORT, function () {
 		console.log("[" + (new Date()) + "] SERVER LISTENING ON PORT *:" + PORT);
 	});
-});
-
-main(process.env.args.splice(2));
+})(process.argv.splice(2));
