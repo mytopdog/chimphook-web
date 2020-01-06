@@ -119,21 +119,21 @@ function handle_page(request, response) {
 				case "/signup":
 					load_page(request, response, "signup.html");
 					break;
-				case "/account":
+				case "/user":
 					function redirect() {
-						if (request.user.username) {
-							response.end("<html><body><script>location.href=\"/account?user=" + request.user.username + "\";</script></body></html>");
+						if (request.user && request.user.username) {
+							response.end("<html><body><script>location.href=\"/user?u=" + request.user.username + "\";</script></body></html>");
 						} else {
 							response.end(RESPONSE_REDIRECT);
 						}
 					}
 					
 					if (parse_url.query) {
-						var user = get_query(parse_url.query, "user");
+						var user = get_query(parse_url.query, "u");
 						if (user) {
 							user_handles.user_exists(user).then(function (exists) {
 								if (exists) {
-									fs.readFile(path.resolve(PUBLIC_PAGE, "account.html"), "utf-8", function (err, data) {
+									fs.readFile(path.resolve(PUBLIC_PAGE, "user.html"), "utf-8", function (err, data) {
 										if (err) {
 											response.writeHead(500);
 											response.end(RESPONSE_500);
@@ -345,8 +345,6 @@ function handle_request(request, response) {
 
 (function main(args) {
 	var MAIN_SERVER;
-	
-	console.log("Cert exists?: " + fs.existsSync(CERT_BASE));
 
 	if (false) {//fs.existsSync(CERT_BASE)) {
 		PORT = 433;
