@@ -163,10 +163,11 @@ function handle_page(request, response) {
 											
 											var json = JSON.parse(data);
 											
-											user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username + (json.admin ? " [ADMIN]" : "")));
+											user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username));
 											user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
 											user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.location.country || "n/a"));
 											user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
+											user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
 											user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
 											
 											response.writeHead(200);
