@@ -1,4 +1,5 @@
 var http = require("http");
+var https = require("https");
 var WebSocket = require("websocket");
 var url = require("url");
 var path = require("path");
