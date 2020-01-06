@@ -83,57 +83,140 @@ function handle_page(request, response) {
 	var parse_url = url.parse(request.url);
 	var pathname = parse_url.pathname;
 	
-	if (pathname.startsWith("/resource/")) {
-		fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
-			if (err) {
-				if (err.code == "ENOENT") {
-					response.setHeader("Content-Type", "text/plain");
-					response.writeHead(404);
-					response.end(RESPONSE_404);
-				}
-				
-				response.setHeader("Content-Type", "text/plain");
-				response.writeHead(500);
-				response.end(RESPONSE_500);
+	var ip = request.headers['cf-connecting-ip'] || request.headers['x-forwarded-for'] || request.connection.remoteAddres;
+	
+	fs.readFile(path.resolve(INFO_BASE, "bans.json"), "utf-8", function (err, data) {
+		if (err) {
+			return;
+		}
+		
+		var json = JSON.parse(data);
+		if (json.ip[ip]) {
+			respone.writeHead(401);
+			return response.end("banned");
+		} else {
+			if (pathname.startsWith("/resource/")) {
+				fs.readFile(path.resolve(PUBLIC_RESOURCE, pathname.substr("/resource/".length)), function (err, data) {
+					if (err) {
+						if (err.code == "ENOENT") {
+							response.setHeader("Content-Type", "text/plain");
+							response.writeHead(404);
+							response.end(RESPONSE_404);
+						}
+						
+						response.setHeader("Content-Type", "text/plain");
+						response.writeHead(500);
+						response.end(RESPONSE_500);
+						
+						return;
+					}
+					
+					response.setHeader("Content-Type", MIME_TYPES[pathname.split(".")[1]]);
+					response.writeHead(200);
+					response.end(data);
+				});
 				
 				return;
 			}
-			
-			response.setHeader("Content-Type", MIME_TYPES[pathname.split(".")[1]]);
-			response.writeHead(200);
-			response.end(data);
-		});
-		
-		return;
-	}
 
-	switch(request.method) {
-		case "GET":
-			switch (pathname) {
-				case "/":
-					load_page(request, response, request.user ? "index_login.html" : "index.html");
-					break;
-				case "/login":
-					load_page(request, response, "login.html");
-					break;
-				case "/signup":
-					load_page(request, response, "signup.html");
-					break;
-				case "/user":
-					function redirect() {
-						if (request.user && request.user.username) {
-							response.end("<html><body><script>location.href=\"/user?u=" + request.user.username + "\";</script></body></html>");
-						} else {
-							response.end(RESPONSE_REDIRECT);
-						}
-					}
-					
-					if (parse_url.query) {
-						var user = get_query(parse_url.query, "u");
-						if (user) {
-							user_handles.user_exists(user).then(function (exists) {
-								if (exists) {
-									fs.readFile(path.resolve(PUBLIC_PAGE, "user.html"), "utf-8", function (err, data) {
+			switch(request.method) {
+				case "GET":
+					switch (pathname) {
+						case "/":
+							load_page(request, response, request.user ? "index_login.html" : "index.html");
+							break;
+						case "/login":
+							load_page(request, response, "login.html");
+							break;
+						case "/signup":
+							load_page(request, response, "signup.html");
+							break;
+						case "/user":
+							function redirect() {
+								if (request.user && request.user.username) {
+									response.end("<html><body><script>location.href=\"/user?u=" + request.user.username + "\";</script></body></html>");
+								} else {
+									response.end(RESPONSE_REDIRECT);
+								}
+							}
+							
+							if (parse_url.query) {
+								var user = get_query(parse_url.query, "u");
+								if (user) {
+									user_handles.user_exists(user).then(function (exists) {
+										if (exists) {
+											fs.readFile(path.resolve(PUBLIC_PAGE, "user.html"), "utf-8", function (err, data) {
+												if (err) {
+													response.writeHead(500);
+													response.end(RESPONSE_500);
+													
+													return;
+												}
+											
+												var document = html_parser.parse(data, {
+													script: true,
+													style: true,
+													pre: true
+												});
+												
+												if (request.user) {
+													var logged_in = document.querySelector("#login-check");
+												
+													if (logged_in)
+														logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+												}
+												
+												var user_e = document.querySelector("#user-info");
+												
+												fs.readFile(path.resolve(INFO_BASE, "users/" + user + "/account.json"), "utf-8", function (err, data) {
+													if (err) {
+														response.writeHead(500);
+														response.end(RESPONSE_500);
+														
+														return;
+													}
+													
+													var json = JSON.parse(data);
+													
+													user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username));
+													user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
+													user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.location.country || "n/a"));
+													user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
+													user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
+													user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
+													
+													response.writeHead(200);
+													response.end(document.toString());
+												});
+											});
+										} else {
+											redirect();
+										}
+									}).catch(redirect);
+								} else {
+									redirect();
+								}
+							} else {
+								redirect();
+							}
+							break;
+						case "/admin/invites":
+							if (request.user && request.user.admin) {
+								fs.readFile(path.resolve(PUBLIC_PAGE, "invites.html"), "utf-8", function (err, data) {
+									if (err) {
+										response.writeHead(500);
+										response.end(RESPONSE_500);
+										
+										return;
+									}
+								
+									var document = html_parser.parse(data, {
+										script: true,
+										style: true,
+										pre: true
+									});
+									
+									fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
 										if (err) {
 											response.writeHead(500);
 											response.end(RESPONSE_500);
@@ -141,174 +224,172 @@ function handle_page(request, response) {
 											return;
 										}
 									
-										var document = html_parser.parse(data, {
-											script: true,
-											style: true,
-											pre: true
-										});
+										var json = JSON.parse(data);
+										var codes = Object.values(json);
 										
-										if (request.user) {
-											var logged_in = document.querySelector("#login-check");
+										var logged_in = document.querySelector("#login-check");
+									
+										if (logged_in)
+											logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
 										
-											if (logged_in)
-												logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+										var invites = document.querySelector("#invites");
+										
+										invites.set_content("<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
+											return b.uses - a.uses;
+										}).map(function (code, i) {
+											return "<th>" + (i+1) + ". </th>" +
+												"<th class=\"code\">" + code.code + "</th>" +
+												"<th><input style=\"width: 35px\" value=\"" + code.uses + "\" onchange=\"set_uses('" + code.code + "', this.value)\"/></th>" +
+												"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"destroy_invite('" + code.code + "')\">x</a></th>"
+										}).join("<tr>"));
+											
+										response.writeHead(200);
+										response.end(document.toString());
+									});
+								});
+							} else {
+								response.end(RESPONSE_REDIRECT);
+							}
+							break;
+						case "/logout":
+							session_handles.handle_logout(request, response).then(function () {
+								response.writeHead(200);
+								response.end(RESPONSE_REDIRECT);
+							}).catch(function () {
+								response.writeHead(403);
+								response.end(RESPONSE_REDIRECT);
+							});
+							break;
+						case "/loggedin":
+							if (request.user) {
+								response.end(JSON.stringify({
+									loggedin: true,
+									username: request.user.username
+								}));
+							} else {
+								response.end(JSON.stringify({
+									loggedin: false,
+									username: ""
+								}));
+							}
+							break;
+					}
+					break;
+				case "POST":
+					switch (pathname) {
+						case "/signup":
+							user_handles.handle_signup(request, response).then(function (success) {
+								response.end(JSON.stringify({
+									OK: true,
+									error: null,
+									username: success.username
+								}));
+							}).catch(function (err) {
+								response.writeHead(200);
+								response.end(JSON.stringify({
+									OK: false,
+									error: err
+								}));
+							});
+							break;
+						case "/login":
+							if (request.user) {
+								response.writeHead(200);
+								response.end(JSON.stringify({
+									OK: false,
+									error: "ERROR: You are already logged in"
+								}));
+							} else {
+								session_handles.handle_login(request, response).then(function (success) {
+									response.end(JSON.stringify({
+										OK: true,
+										error: null,
+										username: success.username,
+										session: success.session
+									}));
+								}).catch(function (err) {
+									response.writeHead(200);
+									response.end(JSON.stringify({
+										OK: false,
+										error: err
+									}));
+								});
+							}
+							break;
+						case "/logout":
+							session_handles.handle_logout(request, response).then(res.send).catch(console.log);
+							break;
+						case "/admin/modify-invite":
+							var action = request.headers["action"];
+							var invite_code = request.headers["invite_code"];
+							
+							if (request.user) {
+								if (request.user.admin) {
+									fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
+										if (err) {
+											return response.end(JSON.stringify({
+												OK: false,
+												error: "ERROR: Internal server error."
+											}));
 										}
 										
-										var user_e = document.querySelector("#user-info");
-										
-										fs.readFile(path.resolve(INFO_BASE, "users/" + user + "/account.json"), "utf-8", function (err, data) {
-											if (err) {
-												response.writeHead(500);
-												response.end(RESPONSE_500);
-												
-												return;
-											}
-											
+										if (data) {
 											var json = JSON.parse(data);
 											
-											user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username));
-											user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
-											user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.location.country || "n/a"));
-											user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
-											user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
-											user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
+											if (json[invite_code]) {
+												if (action == "delete") {
+													delete json[invite_code];
+												} else if (action == "set-uses") {
+													if (parseInt(request.headers["uses"])) {
+														json[invite_code].uses = parseInt(request.headers["uses"]);
+													}
+												}
+											}
 											
-											response.writeHead(200);
-											response.end(document.toString());
-										});
+											fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), JSON.stringify(json), function (err) {
+												if (err) {
+													return response.end(JSON.stringify({
+														OK: false,
+														error: "ERROR: Internal server error."
+													}));
+												}
+												
+												var codes = Object.values(json);
+												
+												response.writeHead(200);
+												response.end(JSON.stringify({
+													OK: true,
+													error: null,
+													new_content: "<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
+														return b.uses - a.uses;
+													}).map(function (code, i) {
+														return "<th>" + (i+1) + ". </th>" +
+															"<th class=\"code\">" + code.code + "</th>" +
+															"<th><input style=\"width: 35px\" value=\"" + code.uses + "\" onchange=\"set_uses('" + code.code + "', this.value)\"/></th>" +
+															"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"destroy_invite('" + code.code + "')\">x</a></th>"
+													}).join("<tr>")
+												}));
+											});
+										}
 									});
 								} else {
-									redirect();
+									response.end(JSON.stringify({
+										OK: false,
+										error: "ERROR: Not enough permissions."
+									}));
 								}
-							}).catch(redirect);
-						} else {
-							redirect();
-						}
-					} else {
-						redirect();
-					}
-					break;
-				case "/admin/invites":
-					if (request.user && request.user.admin) {
-						fs.readFile(path.resolve(PUBLIC_PAGE, "invites.html"), "utf-8", function (err, data) {
-							if (err) {
-								response.writeHead(500);
-								response.end(RESPONSE_500);
-								
-								return;
+							} else {
+								response.end(JSON.stringify({
+									OK: false,
+									error: "ERROR: You are not logged in"
+								}));
 							}
-						
-							var document = html_parser.parse(data, {
-								script: true,
-								style: true,
-								pre: true
-							});
-							
-							fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
-								if (err) {
-									response.writeHead(500);
-									response.end(RESPONSE_500);
-									
-									return;
-								}
-							
-								var json = JSON.parse(data);
-								var codes = Object.values(json);
-								
-								var logged_in = document.querySelector("#login-check");
-							
-								if (logged_in)
-									logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
-								
-								var invites = document.querySelector("#invites");
-								
-								invites.set_content("<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
-									return b.uses - a.uses;
-								}).map(function (code, i) {
-									return "<th>" + (i+1) + ". </th>" +
-										"<th class=\"code\">" + code.code + "</th>" +
-										"<th>" + code.uses + "</th>";
-								}).join("<tr>"));
-									
-								response.writeHead(200);
-								response.end(document.toString());
-							});
-						});
-					} else {
-						response.end(RESPONSE_REDIRECT);
-					}
-					break;
-				case "/logout":
-					session_handles.handle_logout(request, response).then(function () {
-						response.writeHead(200);
-						response.end(RESPONSE_REDIRECT);
-					}).catch(function () {
-						response.writeHead(403);
-						response.end(RESPONSE_REDIRECT);
-					});
-					break;
-				case "/loggedin":
-					if (request.user) {
-						response.end(JSON.stringify({
-							loggedin: true,
-							username: request.user.username
-						}));
-					} else {
-						response.end(JSON.stringify({
-							loggedin: false,
-							username: ""
-						}));
+							break;
 					}
 					break;
 			}
-			break;
-		case "POST":
-			switch (pathname) {
-				case "/signup":
-					user_handles.handle_signup(request, response).then(function (success) {
-						response.end(JSON.stringify({
-							OK: true,
-							error: null,
-							username: success.username
-						}));
-					}).catch(function (err) {
-						response.writeHead(200);
-						response.end(JSON.stringify({
-							OK: false,
-							error: err
-						}));
-					});
-					break;
-				case "/login":
-					if (request.user) {
-						response.writeHead(200);
-						response.end(JSON.stringify({
-							OK: false,
-							error: "ERROR: You are already logged in"
-						}));
-					} else {
-						session_handles.handle_login(request, response).then(function (success) {
-							response.end(JSON.stringify({
-								OK: true,
-								error: null,
-								username: success.username,
-								session: success.session
-							}));
-						}).catch(function (err) {
-							response.writeHead(200);
-							response.end(JSON.stringify({
-								OK: false,
-								error: err
-							}));
-						});
-					}
-					break;
-				case "/logout":
-					session_handles.handle_logout(request, response).then(res.send).catch(console.log);
-					break;
-			}
-			break;
-	}
+		}
+	});
 }
 
 function handle_request(request, response) {

@@ -11,7 +11,47 @@
 		<div style="position: relative" class="-main">
 			<span id="hour">00</span><span>:</span><span id="minute">00</span><span>:</span><span id="second">00</span><span> | </span><span>thechimp.store</span><span> | </span><span id="login-check">not logged in</span><br><br>
 			<span><a href="/">[click here to go back]</a></span><br><br>
-			<table id="invites"></table>
+			<table style="display: inline-block; height: 300px; overflow-y: scroll;" id="invites"></table>
 		</div>
+		<script>
+			function destroy_invite(invite_code) {
+				let xhr = new XMLHttpRequest();
+				xhr.open("POST", "/admin/modify-invite");
+				xhr.setRequestHeader("invite_code", invite_code);
+				xhr.setRequestHeader("action", "delete");
+				xhr.setRequestHeader("-from", "-web-client");
+				xhr.send();
+
+				xhr.onload = function() {
+					if (xhr.status == 200) {
+						var json = JSON.parse(xhr.response);
+						
+						if (json.OK) {
+							document.querySelector("#invites").innerHTML = json.new_content;
+						}
+					}
+				}
+			}
+			
+			function set_uses(invite_code, uses) {
+				let xhr = new XMLHttpRequest();
+				xhr.open("POST", "/admin/modify-invite");
+				xhr.setRequestHeader("invite_code", invite_code);
+				xhr.setRequestHeader("action", "set-uses");
+				xhr.setRequestHeader("uses", uses);
+				xhr.setRequestHeader("-from", "-web-client");
+				xhr.send();
+
+				xhr.onload = function() {
+					if (xhr.status == 200) {
+						var json = JSON.parse(xhr.response);
+						
+						if (json.OK) {
+							document.querySelector("#invites").innerHTML = json.new_content;
+						}
+					}
+				}
+			}
+		</script>
 	</body>
 </html>

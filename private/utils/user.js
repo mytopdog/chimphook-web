@@ -52,6 +52,32 @@ function check_invite_code(invite_code) {
 	});
 }
 
+function destroy_invite_code(invite_code) {
+	return new Promise(function (resolve, reject) {
+		fs.readFile(path.resolve(INFO_BASE, "invite_codes.json"), "utf-8", function (err, data) {
+			if (err) {
+				return reject(err);
+			}
+			
+			if (data) {
+				var json = JSON.parse(data);
+				
+				if (json[invite_code]) {
+					delete json[invite_code];
+				}
+				
+				fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), JSON.stringify(json), function (err) {
+					if (err) {
+						return reject(err);
+					}
+					
+					resolve(invite_code);
+				});
+			}
+		});
+	});
+}
+
 function check_username(username) {
 	return new Promise(function (resolve, reject) {
 		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
@@ -212,5 +238,6 @@ function handle_signup(request, response) {
 
 module.exports = {
 	handle_signup,
-	user_exists
+	user_exists,
+	destroy_invite_code
 };

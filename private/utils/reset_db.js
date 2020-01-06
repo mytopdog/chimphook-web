@@ -5,6 +5,11 @@ var readline = require("readline");
 var INFO_BASE = path.resolve(__dirname, "../info/");
 var USERS_BASE = path.resolve(INFO_BASE, "users/");
 
+var SETTINGS = {
+	AWAIT_CONFIRM: 5000,
+	DO_BANS: true
+}
+
 function handle_error(err) {
 	if (err) {
 		console.log("[FATAL] Error occurred. Stopping whole process.");
@@ -87,7 +92,23 @@ function clear_files() {
 				
 				console.log("- - [INFO] Cleared session database.");
 				
-				resolve(true);
+				if (SETTINGS.DO_BANS) {
+					console.log("- - [INFO] Clearing ban database..");
+					
+					fs.writeFile(path.resolve(INFO_BASE, "bans.json"), "{\"ip\": {}, \"users\": {}}", function (err) {
+						if (err) {
+							return reject(err);
+						}
+						
+						console.log("- - [INFO] Cleared ban database.");
+						
+						resolve(true);
+					});
+				} else {
+					console.log("- - [INFO] Skipping ban database..");
+				
+					resolve(true);
+				}
 			});
 		});
 	});
@@ -116,16 +137,14 @@ function clear_db() {
 	});
 }
 
-var AWAIT_CONFIRM = 5000;
-
 function begin_clear() {
-	console.log("[BEGIN] Beginning process in 5 seconds..");
+	console.log("[BEGIN] Beginning process in " + (SETTINGS.AWAIT_CONFIRM / 1000) + " seconds..");
 	
 	setTimeout(function () {
 		clear_db().then(function () {
 			console.log("[END] Process complete.");
 		}).catch(()=>{});
-	}, AWAIT_CONFIRM);
+	}, SETTINGS.AWAIT_CONFIRM);
 }
 
 (function main(args) {
@@ -134,7 +153,11 @@ function begin_clear() {
 	}
 	
 	if (args.indexOf("-no-wait") != -1) {
-		AWAIT_CONFIRM = 0;
+		SETTINGS.AWAIT_CONFIRM = 0;
+	}
+	
+	if (args.indexOf("-no-bans") != -1) {
+		SETTINGS.DO_BANS = false;
 	}
 	
 	console.log("[BEGIN] Database clearing.");
