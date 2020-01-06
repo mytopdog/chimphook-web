@@ -348,7 +348,7 @@ function handle_request(request, response) {
 	
 	console.log("Cert exists?: " + fs.existsSync(CERT_BASE));
 
-	if (fs.existsSync(CERT_BASE)) {
+	if (false) {//fs.existsSync(CERT_BASE)) {
 		PORT = 433;
 		MAIN_SERVER = https.createServer({
 			key: fs.readFileSync(path.resolve(CERT_BASE, "privkey.pem")),
