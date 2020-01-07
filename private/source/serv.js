@@ -406,7 +406,7 @@ function handle_page(request, response) {
 												if (action == "delete") {
 													delete json[invite_code];
 												} else if (action == "set-uses") {
-													if (parseInt(request.headers["uses"])) {
+													if ((parseInt(request.headers["uses"]) && parseInt(request.headers["uses"]) > 0) || request.headers["uses"] == 0) {
 														json[invite_code].uses = parseInt(request.headers["uses"]);
 													}
 												}
