@@ -105,6 +105,6 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
-private/info
+private/info/
 private/utils/codes.txt
 private/cert/*
