@@ -71,7 +71,7 @@ function load_page(request, response, page) {
 			var logged_in = document.querySelector("#login-check");
 		
 			if (logged_in)
-				logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+				logged_in.set_content("<a href=\"/user?u=" + request.user.username + "\">" + request.user.username + (request.user.admin ? " [ADMIN]" : "") + "</a>");
 		}
 			
 		response.writeHead(200);
@@ -163,12 +163,10 @@ function handle_page(request, response) {
 													var logged_in = document.querySelector("#login-check");
 												
 													if (logged_in)
-														logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+														logged_in.set_content("<a href=\"/user?u=" + request.user.username + "\">" + request.user.username + (request.user.admin ? " [ADMIN]" : "") + "</a>");
 												}
 												
-												var user_e = document.querySelector("#user-info");
-												
-												fs.readFile(path.resolve(INFO_BASE, "users/" + user + "/account.json"), "utf-8", function (err, data) {
+												fs.readFile(path.resolve(INFO_BASE, "users/" + user.toLowerCase() + "/account.json"), "utf-8", function (err, data) {
 													if (err) {
 														response.writeHead(500);
 														response.end(RESPONSE_500);
@@ -177,13 +175,18 @@ function handle_page(request, response) {
 													}
 													
 													var json = JSON.parse(data);
+													var user_e = document.querySelector("#user-info");
 													
 													user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username));
 													user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
-													user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.location.country || "n/a"));
+													user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.country || "n/a"));
 													user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
 													user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
 													user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
+													
+													if (request.user && json.username == request.user.username) {
+														user_e.set_content(user_e.innerHTML + "<br><br><span><a href=\"/edit-profile\">[edit profile]</a></span>");
+													}
 													
 													response.writeHead(200);
 													response.end(document.toString());
@@ -406,7 +409,7 @@ function handle_request(request, response) {
 			var json = JSON.parse(data);
 			
 			if (json[session]) {
-				fs.readFile(path.resolve(INFO_BASE, "users/" + json[session] + "/account.json"), "utf-8", function (err, data) {
+				fs.readFile(path.resolve(INFO_BASE, "users/" + json[session].toLowerCase() + "/account.json"), "utf-8", function (err, data) {
 					if (err) {
 						console.log(err);
 						return handle_page(request, response);

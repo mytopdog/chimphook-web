@@ -80,7 +80,7 @@ function destroy_invite_code(invite_code) {
 
 function check_username(username) {
 	return new Promise(function (resolve, reject) {
-		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
+		fs.exists(path.resolve(USERS_BASE, username.toLowerCase() + "/"), function (exists) {
 			resolve(!exists);
 		});
 	});
@@ -88,7 +88,7 @@ function check_username(username) {
 
 function user_exists(username) {
 	return new Promise(function (resolve, reject) {
-		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
+		fs.exists(path.resolve(USERS_BASE, username.toLowerCase() + "/"), function (exists) {
 			resolve(exists);
 		});
 	});
@@ -115,12 +115,12 @@ function create_user(request, response, data) {
 	var ip = request.headers['cf-connecting-ip'] || request.headers['x-forwarded-for'] || request.connection.remoteAddres;
 	
 	return new Promise(function (resolve, reject) {
-		mkdir(path.resolve(USERS_BASE, data.username), function (err) {
+		mkdir(path.resolve(USERS_BASE, data.username.toLowerCase()), function (err) {
 			if (err) {
 				return reject(err);
 			}
 			
-			var USER_BASE = path.resolve(USERS_BASE, data.username);
+			var USER_BASE = path.resolve(USERS_BASE, data.username.toLowerCase());
 			
 			ip_locate.getDomainOrIPDetails(ip, "json", function (err, details) {
 				fs.writeFile(path.resolve(USER_BASE, "account.json"), JSON.stringify({
@@ -129,6 +129,7 @@ function create_user(request, response, data) {
 				password: data.hash,
 				ip,
 				location: details,
+				country: "",
 				used_invite_code: data.invite_code,
 				invited_by: data.invite_code.invited_by,
 				admin: false,

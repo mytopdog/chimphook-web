@@ -86,7 +86,7 @@ function get_user_hash(username) {
 	return new Promise(function (resolve, reject) {
 		check_username(username).then(function (available) {
 			if (!available) {
-				fs.readFile(path.resolve(USERS_BASE, username + "/account.json"), "utf-8", function (err, data) {
+				fs.readFile(path.resolve(USERS_BASE, username.toLowerCase() + "/account.json"), "utf-8", function (err, data) {
 					if (err) {
 						return reject(err);
 					}
