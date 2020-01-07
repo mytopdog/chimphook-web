@@ -1,4 +1,4 @@
 # chimphook-web
 CHIMPHOOK WEBSITE FOR YA'LL
 
-[http://thechimp.store](website)
+[website](http://thechimp.store)
