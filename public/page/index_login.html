@@ -13,9 +13,17 @@
 			<span>[chimphook premium legit cheat]</span><br>
 			<span>- developed and maintained by chimp</span><br>
 			<span>- beta open shortly</span><br><br>
-			<span><a href="/logout">[click here to log out]</a></span><br><br>
+			<span><a href="/logout">[click here to log out]</a></span><br>
+			<span><a style="display: none" id="admin-dash" href="/admin/dash">[click here to view admin dashboard]</a></span><br><br>
 			<span>[contact]</span><br>
 			<span>- ChimpStoreWorker#5475 <img src="resource/img/englishflag.jpg" width=16/></span>
 		</div>
+		<script>
+			var invite_check = document.querySelector("#login-check");
+			
+			if (invite_check.innerHTML.indexOf("[ADMIN]") != -1) {
+				document.querySelector("#admin-dash").style.display = "inline";
+			}
+		</script>
 	</body>
 </html>

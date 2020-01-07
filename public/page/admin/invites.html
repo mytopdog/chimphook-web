@@ -19,7 +19,6 @@
 				xhr.open("POST", "/admin/modify-invite");
 				xhr.setRequestHeader("invite_code", invite_code);
 				xhr.setRequestHeader("action", "delete");
-				xhr.setRequestHeader("-from", "-web-client");
 				xhr.send();
 
 				xhr.onload = function() {
@@ -39,7 +38,6 @@
 				xhr.setRequestHeader("invite_code", invite_code);
 				xhr.setRequestHeader("action", "set-uses");
 				xhr.setRequestHeader("uses", uses);
-				xhr.setRequestHeader("-from", "-web-client");
 				xhr.send();
 
 				xhr.onload = function() {

@@ -48,7 +48,6 @@
 								xhr.open("POST", "/login");
 								xhr.setRequestHeader("username", username);
 								xhr.setRequestHeader("password", password);
-								xhr.setRequestHeader("-from", "-web-client");
 								xhr.send();
 
 								xhr.onload = function() {

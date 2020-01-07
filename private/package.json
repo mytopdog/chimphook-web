@@ -6,9 +6,7 @@
   "scripts": {
     "start": "node source/serv.js -secure"
   },
-  "keywords": [
-    "]"
-  ],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {

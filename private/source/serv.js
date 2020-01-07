@@ -203,9 +203,15 @@ function handle_page(request, response) {
 								redirect();
 							}
 							break;
+						case "/admin/dash":
+							if (request.user && request.user.admin) {
+								load_page(request, response, "admin/dash.html");
+							} else {
+								response.end(RESPONSE_REDIRECT);
+							}
 						case "/admin/invites":
 							if (request.user && request.user.admin) {
-								fs.readFile(path.resolve(PUBLIC_PAGE, "invites.html"), "utf-8", function (err, data) {
+								fs.readFile(path.resolve(PUBLIC_PAGE, "admin/invites.html"), "utf-8", function (err, data) {
 									if (err) {
 										response.writeHead(500);
 										response.end(RESPONSE_500);
@@ -254,6 +260,60 @@ function handle_page(request, response) {
 								response.end(RESPONSE_REDIRECT);
 							}
 							break;
+						case "/admin/bans":
+							if (request.user && request.user.admin) {
+								fs.readFile(path.resolve(PUBLIC_PAGE, "admin/bans.html"), "utf-8", function (err, data) {
+									if (err) {
+										response.writeHead(500);
+										response.end(RESPONSE_500);
+										
+										return;
+									}
+								
+									var document = html_parser.parse(data, {
+										script: true,
+										style: true,
+										pre: true
+									});
+									
+									fs.readFile(path.resolve(INFO_BASE, "bans.json"), "utf-8", function (err, data) {
+										if (err) {
+											response.writeHead(500);
+											response.end(RESPONSE_500);
+											
+											return;
+										}
+									
+										var json = JSON.parse(data);
+										var users = Object.values(json.users);
+										
+										var logged_in = document.querySelector("#login-check");
+									
+										if (logged_in)
+											logged_in.set_content(request.user.username + (request.user.admin ? " [ADMIN]" : ""));
+										
+										var user_bans = document.querySelector("#user-bans");
+										
+										user_bans.set_content("<tr><th>#</th><th>[user]</th><th>[date]</th><th>[duration]</th></tr>" + users.sort(function (a, b){
+											if(a.user < b.user) return -1;
+											if(a.user > b.user) return 1;
+											return 0;
+										}).map(function (ban, i) {
+											return "<th>" + (i+1) + ". </th>" +
+												"<th class=\"user\">" + ban.user + "</th>" +
+												"<th class=\"date\">" + new Date(ban.date).toDateString() + "</th>" +
+												"<th class=\"duration\">" + ban.duration_read + "</th>" +
+												"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"remove_user_ban('" + ban.user + "')\">x</a></th>"
+										}).join("<tr>"));
+											
+										response.writeHead(200);
+										response.end(document.toString());
+									});
+								});
+							} else {
+								response.end(RESPONSE_REDIRECT);
+							}
+							break;
 						case "/logout":
 							session_handles.handle_logout(request, response).then(function () {
 								response.writeHead(200);
@@ -276,6 +336,9 @@ function handle_page(request, response) {
 								}));
 							}
 							break;
+						default:
+							response.writeHead(404);
+							response.end("404");
 					}
 					break;
 				case "POST":
@@ -370,6 +433,72 @@ function handle_page(request, response) {
 															"<th class=\"code\">" + code.code + "</th>" +
 															"<th><input style=\"width: 35px\" value=\"" + code.uses + "\" onchange=\"set_uses('" + code.code + "', this.value)\"/></th>" +
 															"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"destroy_invite('" + code.code + "')\">x</a></th>"
+													}).join("<tr>")
+												}));
+											});
+										}
+									});
+								} else {
+									response.end(JSON.stringify({
+										OK: false,
+										error: "ERROR: Not enough permissions."
+									}));
+								}
+							} else {
+								response.end(JSON.stringify({
+									OK: false,
+									error: "ERROR: You are not logged in"
+								}));
+							}
+							break;
+						case "/admin/modify-ban":
+							var bantype = request.headers["ban-type"];
+							var action = request.headers["action"];
+							var ban = request.headers["ban"];
+							
+							if (request.user) {
+								if (request.user.admin) {
+									fs.readFile(path.resolve(INFO_BASE, "bans.json"), "utf-8", function (err, data) {
+										if (err) {
+											return response.end(JSON.stringify({
+												OK: false,
+												error: "ERROR: Internal server error."
+											}));
+										}
+										
+										if (data) {
+											var json = JSON.parse(data);
+											
+											if (json[bantype === "user" ? "users" : "ip"][ban]) {
+												if (action == "delete") {
+													delete json[bantype === "user" ? "users" : "ip"][ban];
+												}
+											}
+											
+											fs.writeFile(path.resolve(INFO_BASE, "bans.json"), JSON.stringify(json), function (err) {
+												if (err) {
+													return response.end(JSON.stringify({
+														OK: false,
+														error: "ERROR: Internal server error."
+													}));
+												}
+												
+												var users = Object.values(json.users);
+												
+												response.writeHead(200);
+												response.end(JSON.stringify({
+													OK: true,
+													error: null,
+													new_content: "<tr><th>#</th><th>[user]</th><th>[date]</th><th>[duration]</th></tr>" + users.sort(function (a, b){
+														if(a.user < b.user) return -1;
+														if(a.user > b.user) return 1;
+														return 0;
+													}).map(function (ban, i) {
+														return "<th>" + (i+1) + ". </th>" +
+															"<th class=\"user\">" + ban.user + "</th>" +
+															"<th class=\"date\">" + new Date(ban.date).toDateString() + "</th>" +
+															"<th class=\"duration\">" + ban.duration_read + "</th>" +
+															"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"remove_user_ban('" + ban.user + "')\">x</a></th>"
 													}).join("<tr>")
 												}));
 											});
