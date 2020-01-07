@@ -76,7 +76,7 @@ function destroy_session(request, response) {
 
 function check_username(username) {
 	return new Promise(function (resolve, reject) {
-		fs.exists(path.resolve(USERS_BASE, username + "/"), function (exists) {
+		fs.exists(path.resolve(USERS_BASE, username.toLowerCase() + "/"), function (exists) {
 			resolve(!exists);
 		});
 	});
