@@ -102,6 +102,7 @@ function handle_page(request, response) {
 							response.setHeader("Content-Type", "text/plain");
 							response.writeHead(404);
 							response.end(RESPONSE_404);
+							return;
 						}
 						
 						response.setHeader("Content-Type", "text/plain");
@@ -338,7 +339,7 @@ function handle_page(request, response) {
 							break;
 						default:
 							response.writeHead(404);
-							response.end("404");
+							response.end(RESPONSE_404);
 					}
 					break;
 				case "POST":
