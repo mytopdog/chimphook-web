@@ -70,6 +70,21 @@ input:-internal-autofill-selected {
 	font-size: 8pt;
 	font-family: 'PT Mono', monospace;
 }
+
+select {
+	font-size: 8pt;
+	font-family: 'PT Mono', monospace;
+	background: none;
+	color: white;
+	border: none;
+	outline: none;
+	border-bottom: 1px #444444 solid;
+}
+
+option {
+	color: black;
+}
+
 .-main-cursor {
 	display: none;
 	position: absolute;
