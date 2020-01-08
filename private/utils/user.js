@@ -133,7 +133,8 @@ function create_user(request, response, data) {
 				used_invite_code: data.invite_code,
 				invited_by: data.invite_code.invited_by,
 				admin: false,
-				date_joined: new Date().getTime()
+				date_joined: new Date().getTime(),
+				account_type: 0
 			}), function (err) {
 				if (err) {
 					return reject(err);

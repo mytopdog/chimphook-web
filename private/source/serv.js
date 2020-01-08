@@ -24,6 +24,8 @@ var RESPONSE_404 = "404: PAGE NOT FOUND.";
 var RESPONSE_500 = "500: AN ERROR OCCURRED INTERNALLY.";
 var RESPONSE_REDIRECT = "<html><body><script>location.href=\"/\";</script></body></html>";
 
+var COUNTRIES = require("./countries.js");
+
 var MIME_TYPES = {
     html: 'text/html',
     txt: 'text/plain',
@@ -183,6 +185,7 @@ function handle_page(request, response) {
 													user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.country || "n/a"));
 													user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
 													user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
+													user_e.set_content(user_e.innerHTML.replace(/\$account_type/g, ["basic", "premium", "plus"][json.account_type]));
 													user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
 													
 													if (request.user && json.username == request.user.username) {
@@ -204,12 +207,64 @@ function handle_page(request, response) {
 								redirect();
 							}
 							break;
+						case "/edit-profile":
+							if (request.user) {
+								fs.readFile(path.resolve(PUBLIC_PAGE, "edit-profile.html"), "utf-8", function (err, data) {
+									if (err) {
+										response.writeHead(500);
+										response.end(RESPONSE_500);
+										
+										return;
+									}
+								
+									var document = html_parser.parse(data, {
+										script: true,
+										style: true,
+										pre: true
+									});
+									
+									if (request.user) {
+										var logged_in = document.querySelector("#login-check");
+									
+										if (logged_in)
+											logged_in.set_content("<a href=\"/user?u=" + request.user.username + "\">" + request.user.username + (request.user.admin ? " [ADMIN]" : "") + "</a>");
+									}
+									
+									fs.readFile(path.resolve(INFO_BASE, "users/" + request.user.username.toLowerCase() + "/account.json"), "utf-8", function (err, data) {
+										if (err) {
+											response.writeHead(500);
+											response.end(RESPONSE_500);
+											
+											return;
+										}
+										
+										var json = JSON.parse(data);
+										var user_e = document.querySelector("#edit-info");
+										
+										user_e.set_content(user_e.innerHTML.replace(/\$user/g, json.username));
+										user_e.set_content(user_e.innerHTML.replace(/\$invited_by/g, json.invited_by));
+										user_e.set_content(user_e.innerHTML.replace(/\$country(?!code)/g, json.country || ""));
+										user_e.set_content(user_e.innerHTML.replace(/\$countrycode/g, json.location.countryCode || ""));
+										user_e.set_content(user_e.innerHTML.replace(/\$isadmin/g, json.admin));
+										user_e.set_content(user_e.innerHTML.replace(/\$account_type/g, ["basic", "premium", "plus"][json.account_type]));
+										user_e.set_content(user_e.innerHTML.replace(/\$date_joined/g, new Date(json.date_joined).toDateString()));
+										
+										response.writeHead(200);
+										response.end(document.toString());
+									});
+								});
+							} else {
+								response.end(RESPONSE_REDIRECT);
+							}
+							
+							break;
 						case "/admin/dash":
 							if (request.user && request.user.admin) {
 								load_page(request, response, "admin/dash.html");
 							} else {
 								response.end(RESPONSE_REDIRECT);
 							}
+							break;
 						case "/admin/invites":
 							if (request.user && request.user.admin) {
 								fs.readFile(path.resolve(PUBLIC_PAGE, "admin/invites.html"), "utf-8", function (err, data) {
@@ -324,19 +379,6 @@ function handle_page(request, response) {
 								response.end(RESPONSE_REDIRECT);
 							});
 							break;
-						case "/loggedin":
-							if (request.user) {
-								response.end(JSON.stringify({
-									loggedin: true,
-									username: request.user.username
-								}));
-							} else {
-								response.end(JSON.stringify({
-									loggedin: false,
-									username: ""
-								}));
-							}
-							break;
 						default:
 							response.writeHead(404);
 							response.end(RESPONSE_404);
@@ -364,7 +406,7 @@ function handle_page(request, response) {
 								response.writeHead(200);
 								response.end(JSON.stringify({
 									OK: false,
-									error: "ERROR: You are already logged in"
+									error: "ERROR: You are already logged in."
 								}));
 							} else {
 								session_handles.handle_login(request, response).then(function (success) {
@@ -386,6 +428,63 @@ function handle_page(request, response) {
 						case "/logout":
 							session_handles.handle_logout(request, response).then(res.send).catch(console.log);
 							break;
+						case "/update-profile":
+							var action = request.headers["action"];
+							var country = request.headers["country"];
+							
+							if (request.user) {
+								fs.readFile(path.resolve(USERS_BASE, request.user.username.toLowerCase() + "/account.json"), "utf-8", function (err, data) {
+									if (err) {
+										console.log(err);
+										
+										return response.end(JSON.stringify({
+											OK: false,
+											error: "ERROR: Internal server error."
+										}));
+									}
+									
+									var json = JSON.parse(data);
+									
+									if (action == "update") {
+										if (country) {
+											if (COUNTRIES.indexOf(country) != -1) {
+												json["country"] = country;
+											} else {
+												return response.end(JSON.stringify({
+													OK: false,
+													error: "ERROR: Invalid country."
+												}));
+											}
+										}
+									}
+									
+									fs.writeFile(path.resolve(USERS_BASE, request.user.username.toLowerCase() + "/account.json"), JSON.stringify(json), function (err) {
+										if (err) {
+											console.log(err);
+										
+											return response.end(JSON.stringify({
+												OK: false,
+												error: "ERROR: Internal server error."
+											}));
+										}
+										
+										var codes = Object.values(json);
+										
+										response.writeHead(200);
+										response.end(JSON.stringify({
+											OK: true,
+											error: null,
+											country: country
+										}));
+									});
+								});
+							} else {
+								response.end(JSON.stringify({
+									OK: false,
+									error: "ERROR: No session found."
+								}));
+							}
+							break;
 						case "/admin/modify-invite":
 							var action = request.headers["action"];
 							var invite_code = request.headers["invite_code"];
@@ -400,44 +499,42 @@ function handle_page(request, response) {
 											}));
 										}
 										
-										if (data) {
-											var json = JSON.parse(data);
-											
-											if (json[invite_code]) {
-												if (action == "delete") {
-													delete json[invite_code];
-												} else if (action == "set-uses") {
-													if ((parseInt(request.headers["uses"]) && parseInt(request.headers["uses"]) > 0) || request.headers["uses"] == 0) {
-														json[invite_code].uses = parseInt(request.headers["uses"]);
-													}
+										var json = JSON.parse(data);
+										
+										if (json[invite_code]) {
+											if (action == "delete") {
+												delete json[invite_code];
+											} else if (action == "set-uses") {
+												if ((parseInt(request.headers["uses"]) && parseInt(request.headers["uses"]) > 0) || request.headers["uses"] == 0) {
+													json[invite_code].uses = parseInt(request.headers["uses"]);
 												}
 											}
-											
-											fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), JSON.stringify(json), function (err) {
-												if (err) {
-													return response.end(JSON.stringify({
-														OK: false,
-														error: "ERROR: Internal server error."
-													}));
-												}
-												
-												var codes = Object.values(json);
-												
-												response.writeHead(200);
-												response.end(JSON.stringify({
-													OK: true,
-													error: null,
-													new_content: "<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
-														return b.uses - a.uses;
-													}).map(function (code, i) {
-														return "<th>" + (i+1) + ". </th>" +
-															"<th class=\"code\">" + code.code + "</th>" +
-															"<th><input style=\"width: 35px\" value=\"" + code.uses + "\" onchange=\"set_uses('" + code.code + "', this.value)\"/></th>" +
-															"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"destroy_invite('" + code.code + "')\">x</a></th>"
-													}).join("<tr>")
-												}));
-											});
 										}
+										
+										fs.writeFile(path.resolve(INFO_BASE, "invite_codes.json"), JSON.stringify(json), function (err) {
+											if (err) {
+												return response.end(JSON.stringify({
+													OK: false,
+													error: "ERROR: Internal server error."
+												}));
+											}
+											
+											var codes = Object.values(json);
+											
+											response.writeHead(200);
+											response.end(JSON.stringify({
+												OK: true,
+												error: null,
+												new_content: "<tr><th>#</th><th>[code]</th><th>[uses]</th></tr>" + codes.sort(function (a, b) {
+													return b.uses - a.uses;
+												}).map(function (code, i) {
+													return "<th>" + (i+1) + ". </th>" +
+														"<th class=\"code\">" + code.code + "</th>" +
+														"<th><input style=\"width: 35px\" value=\"" + code.uses + "\" onchange=\"set_uses('" + code.code + "', this.value)\"/></th>" +
+														"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"destroy_invite('" + code.code + "')\">x</a></th>"
+												}).join("<tr>")
+											}));
+										});
 									});
 								} else {
 									response.end(JSON.stringify({
@@ -448,7 +545,7 @@ function handle_page(request, response) {
 							} else {
 								response.end(JSON.stringify({
 									OK: false,
-									error: "ERROR: You are not logged in"
+									error: "ERROR: No session found."
 								}));
 							}
 							break;
@@ -467,43 +564,41 @@ function handle_page(request, response) {
 											}));
 										}
 										
-										if (data) {
-											var json = JSON.parse(data);
-											
-											if (json[bantype === "user" ? "users" : "ip"][ban]) {
-												if (action == "delete") {
-													delete json[bantype === "user" ? "users" : "ip"][ban];
-												}
+										var json = JSON.parse(data);
+										
+										if (json[bantype === "user" ? "users" : "ip"][ban]) {
+											if (action == "delete") {
+												delete json[bantype === "user" ? "users" : "ip"][ban];
+											}
+										}
+										
+										fs.writeFile(path.resolve(INFO_BASE, "bans.json"), JSON.stringify(json), function (err) {
+											if (err) {
+												return response.end(JSON.stringify({
+													OK: false,
+													error: "ERROR: Internal server error."
+												}));
 											}
 											
-											fs.writeFile(path.resolve(INFO_BASE, "bans.json"), JSON.stringify(json), function (err) {
-												if (err) {
-													return response.end(JSON.stringify({
-														OK: false,
-														error: "ERROR: Internal server error."
-													}));
-												}
-												
-												var users = Object.values(json.users);
-												
-												response.writeHead(200);
-												response.end(JSON.stringify({
-													OK: true,
-													error: null,
-													new_content: "<tr><th>#</th><th>[user]</th><th>[date]</th><th>[duration]</th></tr>" + users.sort(function (a, b){
-														if(a.user < b.user) return -1;
-														if(a.user > b.user) return 1;
-														return 0;
-													}).map(function (ban, i) {
-														return "<th>" + (i+1) + ". </th>" +
-															"<th class=\"user\">" + ban.user + "</th>" +
-															"<th class=\"date\">" + new Date(ban.date).toDateString() + "</th>" +
-															"<th class=\"duration\">" + ban.duration_read + "</th>" +
-															"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"remove_user_ban('" + ban.user + "')\">x</a></th>"
-													}).join("<tr>")
-												}));
-											});
-										}
+											var users = Object.values(json.users);
+											
+											response.writeHead(200);
+											response.end(JSON.stringify({
+												OK: true,
+												error: null,
+												new_content: "<tr><th>#</th><th>[user]</th><th>[date]</th><th>[duration]</th></tr>" + users.sort(function (a, b){
+													if(a.user < b.user) return -1;
+													if(a.user > b.user) return 1;
+													return 0;
+												}).map(function (ban, i) {
+													return "<th>" + (i+1) + ". </th>" +
+														"<th class=\"user\">" + ban.user + "</th>" +
+														"<th class=\"date\">" + new Date(ban.date).toDateString() + "</th>" +
+														"<th class=\"duration\">" + ban.duration_read + "</th>" +
+														"<th><a style=\"text-decoration: underline\" href=\"#\" onclick=\"remove_user_ban('" + ban.user + "')\">x</a></th>"
+												}).join("<tr>")
+											}));
+										});
 									});
 								} else {
 									response.end(JSON.stringify({
@@ -514,7 +609,7 @@ function handle_page(request, response) {
 							} else {
 								response.end(JSON.stringify({
 									OK: false,
-									error: "ERROR: You are not logged in"
+									error: "ERROR: No session found."
 								}));
 							}
 							break;
